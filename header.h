@@ -162,8 +162,9 @@ OUTPUT: None
 */
 void attachToLinkedList(userInfo,userInfo*);
 
-//free function 
+//free & delete functions
 void freeMap(mapInfo);
+void deleteFile(char*);
 
 //authentication
 /*

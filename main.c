@@ -39,7 +39,10 @@ int main()
                                     printf(clear yellow"Do you want to restore your last play?(enter y for yes and n for no)\n"reset);
                                     command = _getch();
                                     if(command=='n')
+                                    {
                                         currUser.lastPlayStatus=0;
+                                        deleteFile(currUser.id);
+                                    }
                                     else
                                     {
                                         type = readType(currUser.id);
@@ -53,11 +56,13 @@ int main()
                                                 {
                                                     currUser.level+=3;
                                                     currUser.lastPlayStatus=0;
+                                                    deleteFile(currUser.id);
                                                 }
                                                 if(res==2)
                                                 {
                                                     currUser.level --;
                                                     currUser.lastPlayStatus=0;
+                                                    deleteFile(currUser.id);
                                                 }
                                                 break;//go to game menu
                                             case 2:
@@ -68,11 +73,13 @@ int main()
                                                 {
                                                     currUser.level+=3;
                                                     currUser.lastPlayStatus=0;
+                                                    deleteFile(currUser.id);
                                                 }
                                                 if(res==2)
                                                 {
                                                     currUser.level --;
                                                     currUser.lastPlayStatus=0;
+                                                    deleteFile(currUser.id);
                                                 }
                                                 break;//go to game menu
                                         }            

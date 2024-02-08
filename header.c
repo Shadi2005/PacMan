@@ -346,6 +346,13 @@ void freeMap(mapInfo Map)
         free(Map.map[i]);
     free(Map.map);
 }
+void deleteFile(char*id)
+{
+    char fileName[25];
+    strcpy(fileName,id);
+    strcat(fileName,".txt");
+    remove(fileName);
+}
 
 //authentation
 userInfo logIn(userInfo* pHead) 
@@ -467,7 +474,7 @@ void mapDisplay(mapInfo Map)
                 case 'G':
                     printf("\U0001F47E ");
                     break;
-                case '.':
+                case '.':;
                 case ' ':
                     printf("   ");
                     break;
