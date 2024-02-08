@@ -59,7 +59,6 @@ int main()
                                                     currUser.level --;
                                                     currUser.lastPlayStatus=0;
                                                 }
-                                                freeMap(currMap);
                                                 break;//go to game menu
                                             case 2:
                                                 currMap=loadUserMap2(currUser.id,&pacMan,&ghost1,&ghost2);
@@ -75,7 +74,6 @@ int main()
                                                     currUser.level --;
                                                     currUser.lastPlayStatus=0;
                                                 }
-                                                freeMap(currMap);
                                                 break;//go to game menu
                                         }            
                                         flag2=1; //flag2 : not to start a new game while the user has chosen to play his last game
@@ -100,7 +98,6 @@ int main()
                                                 currUser.level+=3;
                                             if(res==2)
                                                 currUser.level --;
-                                            freeMap(currMap);
                                             break;
                                         case 2:
                                             currMap = loadMap(2);
@@ -116,7 +113,6 @@ int main()
                                                 currUser.level+=3;
                                             if(res==2)
                                                 currUser.level --;
-                                            freeMap(currMap);
                                             break;
                                         case 3:
                                             currMap = loadMap(3);
@@ -132,7 +128,6 @@ int main()
                                                 currUser.level+=3;
                                             if(res==2)
                                                 currUser.level --;
-                                            freeMap(currMap);
                                             break;
                                         default:
                                             error("Please enter a valid number!");

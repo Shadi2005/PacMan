@@ -99,7 +99,7 @@ void win()
 {
     int i;
     printf(green);
-    for(i=0;i<30;i++)
+    for(i=0;i<20;i++)
     {
         printf(clear);
         printWin();
@@ -117,7 +117,7 @@ void lose()
 {
     int i;
     printf(red);
-    for(i=0;i<30;i++)
+    for(i=0;i<20;i++)
     {
         printf(clear);
         printLose();
@@ -164,7 +164,7 @@ userInfo* loadUsers()
 }
 mapInfo loadUserMap1(char id[21],xoy*pacMan,xoy*ghost)
 {
-    int i;
+    int i, tmp;
     mapInfo userMap={};
 
     char fileName[25];
@@ -175,6 +175,8 @@ mapInfo loadUserMap1(char id[21],xoy*pacMan,xoy*ghost)
     fp = fopen(fileName,"r");
     if(fp==NULL)
         return userMap;
+    
+    fscanf(fp,"%d",&tmp);
     fscanf(fp,"%d %d",&userMap.yWidth,&userMap.xLength); //geting the size 
     userMap.map=(char**)malloc((userMap.yWidth)*sizeof(char*));
     for(i=0;i<userMap.yWidth;i++) //scaning the map
@@ -211,8 +213,8 @@ mapInfo loadUserMap2(char id[21],xoy*pacMan,xoy*ghost1,xoy*ghost2)
     }
     fscanf(fp,"%d",&userMap.score); //score
     fscanf(fp,"%d %d",&pacMan->x,&pacMan->y);
-    fscanf(fp,"%d %d",&ghost1->x,&ghost2->y);
-    fscanf(fp,"%d %d",&ghost1->x,&ghost2->y);
+    fscanf(fp,"%d %d",&ghost1->x,&ghost1->y);
+    fscanf(fp,"%d %d",&ghost2->x,&ghost2->y);
     fclose(fp);
     return userMap;
 }
@@ -475,11 +477,6 @@ void mapDisplay(mapInfo Map)
     }
         
 }
-int randMove()
-{
-    srand(time(0));
-    return rand()%4 +1;
-}
 int play1(xoy*pacMan,xoy*ghost,mapInfo*Map,userInfo*currUser,int maxScore)
 {
     int input,i;
@@ -527,28 +524,23 @@ int play1(xoy*pacMan,xoy*ghost,mapInfo*Map,userInfo*currUser,int maxScore)
                         pPacMan.x++;
                         flag=1;
                         break;
-                    default:
-                        error("Please enter a valid key!");
                 }
                 if((*Map).map[pPacMan.y][pPacMan.x]=='|' || (*Map).map[pPacMan.y][pPacMan.x]=='-')
                     pPacMan = *pacMan;//pacman doesn't move 
             }
             else
+                if(input=='q')
                 {
-                    if(input=='q')
+                    printf(clear yellow"Do you want to save your game for later?1.Yes2.No\n"reset);
+                    scanf("%d",&command);
+                    if(command==1)
                     {
-                        printf(clear yellow"Do you want to save your game for later?1.Yes2.No\n"reset);
-                        scanf("%d",&command);
-                        if(command==1)
-                        {
-                            storeUserMap1(*Map,currUser->id,*pacMan,*ghost); 
-                            currUser->lastPlayStatus=1;
-                        }
-                        return 3;
+                        storeUserMap1(*Map,currUser->id,*pacMan,*ghost); 
+                        currUser->lastPlayStatus=1;
                     }
-                    else
-                        error("Please enter a valid key!");
+                    return 3;
                 }
+
             //check if the pacman eats the pill
             if((*Map).map[pPacMan.y][pPacMan.x]=='P')
                 (*Map).score++;
@@ -556,6 +548,7 @@ int play1(xoy*pacMan,xoy*ghost,mapInfo*Map,userInfo*currUser,int maxScore)
             if((*Map).score==maxScore)
             {
                 win();
+                freeMap(*Map);
                 return 1; //win
             }
             //updating the map & pacMan position
@@ -565,47 +558,36 @@ int play1(xoy*pacMan,xoy*ghost,mapInfo*Map,userInfo*currUser,int maxScore)
             pacMan->y=pPacMan.y;
         }
         //move ghosts
-        flag=0;
-        while(!flag)
+        move = ghostMove(*Map,pGhost);
+        switch(move)
         {
-            move=randMove();
-            switch(move)
-            {
-                case 1: //up
-                    pGhost.y++;
-                    flag=1;
-                    break;
-                case 2: //down
-                    pGhost.y--;
-                    flag=1;
-                    break;
-                case 3: //right
-                    pGhost.x++;
-                    flag=1;
-                    break;
-                case 4: //left
-                    pGhost.x--;
-                    flag=1;
-                    break;
-            }
-            if((*Map).map[pGhost.y][pGhost.x]=='|' || (*Map).map[pGhost.y][pGhost.x]=='-') 
-            {
-                pGhost = *ghost;
-                flag=0;
-            }   
-            else 
-                if(pPacMan.x==pGhost.x && pPacMan.y==pGhost.y)
-                {
-                    lose();
-                    return 2; //means lose
-                } 
+            case 1: //up
+                pGhost.y++;
+                break;
+            case 2: //down
+                pGhost.y--;
+                break;
+            case 3: //right
+                pGhost.x++;
+                break;
+            case 4: //left
+                pGhost.x--;
+                break;
+            default:
+                pGhost = *ghost; //when the ghost can't move
         }
+        if(pPacMan.x==pGhost.x && pPacMan.y==pGhost.y)
+        {
+            lose();
+            freeMap(*Map);
+            return 2; //means lose
+        } 
         (*Map).map[pGhost.y][pGhost.x]='G';
         if((*Map).map[ghost->y][ghost->x] != '@')
             (*Map).map[ghost->y][ghost->x]=' ';
         ghost->x=pGhost.x;
         ghost->y=pGhost.y;
-        Sleep(500);
+        Sleep(600);
     }
 }
 int play2(xoy*pacMan,xoy*ghost1,xoy*ghost2,mapInfo*Map,userInfo*currUser,int maxScore)
@@ -656,27 +638,21 @@ int play2(xoy*pacMan,xoy*ghost1,xoy*ghost2,mapInfo*Map,userInfo*currUser,int max
                         pPacMan.x++;
                         flag=1;
                         break;
-                    default:
-                        error("Please enter a valid key!");
                 }
                 if((*Map).map[pPacMan.y][pPacMan.x]=='|' || (*Map).map[pPacMan.y][pPacMan.x]=='-')
                     pPacMan = *pacMan;//pacman doesn't move 
             }
             else
+                if(input=='q')
                 {
-                    if(input=='q')
+                    printf(clear yellow"Do you want to save your game for later?1.Yes2.No\n"reset);
+                    scanf("%d",&command);
+                    if(command==1)
                     {
-                        printf(clear yellow"Do you want to save your game for later?1.Yes2.No\n"reset);
-                        scanf("%d",&command);
-                        if(command==1)
-                        {
-                            storeUserMap2(*Map,currUser->id,*pacMan,*ghost1,*ghost2); 
-                            currUser->lastPlayStatus=1;
-                        }
-                        return 3;
+                        storeUserMap2(*Map,currUser->id,*pacMan,*ghost1,*ghost2); 
+                        currUser->lastPlayStatus=1;
                     }
-                    else
-                        error("Please enter a valid key!");
+                    return 3;
                 }
             
             //check if the pacman eats the pill
@@ -686,6 +662,7 @@ int play2(xoy*pacMan,xoy*ghost1,xoy*ghost2,mapInfo*Map,userInfo*currUser,int max
             if((*Map).score==maxScore)
             {
                 win();
+                freeMap(*Map);
                 return 1; //win
             }
             //updating the map & pacMan position
@@ -698,86 +675,101 @@ int play2(xoy*pacMan,xoy*ghost1,xoy*ghost2,mapInfo*Map,userInfo*currUser,int max
             }
         }
         //move ghosts
-        flag=0;
-        while(!flag)
+        move = ghostMove(*Map,pGhost1);
+        switch(move)
         {
-            move=randMove();
-            switch(move)
-            {
-                case 1: //up
-                    pGhost1.y++;
-                    flag=1;
-                    break;
-                case 2: //down
-                    pGhost1.y--;
-                    flag=1;
-                    break;
-                case 3: //right
-                    pGhost1.x++;
-                    flag=1;
-                    break;
-                case 4: //left
-                    pGhost1.x--;
-                    flag=1;
-                    break;
-            }
-            if((*Map).map[pGhost1.y][pGhost1.x]=='|' || (*Map).map[pGhost1.y][pGhost1.x]=='-' || (*Map).map[pGhost1.y][pGhost1.x]=='P' || (*Map).map[pGhost1.y][pGhost1.x]=='G') 
-            {
-                pGhost1 = *ghost1;
-                flag=0;
-            }   
-            else 
-                if(pPacMan.x==pGhost1.x && pPacMan.y==pGhost1.y)
-                {
-                    lose();
-                    return 2; //means lose
-                } 
+            case 1: //up
+                pGhost1.y++;
+                break;
+            case 2: //down
+                pGhost1.y--;
+                break;
+            case 3: //right
+                pGhost1.x++;
+                break;
+            case 4: //left
+                pGhost1.x--;
+                break;
+            default:
+                pGhost1 = *ghost1; //when the ghost can't move
         }
+        if(pPacMan.x==pGhost1.x && pPacMan.y==pGhost1.y)
+        {
+            lose();
+            freeMap(*Map);
+            return 2; //means lose
+        } 
         (*Map).map[pGhost1.y][pGhost1.x]='G';
         if((*Map).map[ghost1->y][ghost1->x] != '@')
             (*Map).map[ghost1->y][ghost1->x]=' ';
         ghost1->x=pGhost1.x;
         ghost1->y=pGhost1.y;
-        flag=0;
-        while(!flag)
+        
+        move = ghostMove(*Map,pGhost2);
+        switch(move)
         {
-            move=randMove();
-            switch(move)
-            {
-                case 1: //up
-                    pGhost2.y++;
-                    flag=1;
-                    break;
-                case 2: //down
-                    pGhost2.y--;
-                    flag=1;
-                    break;
-                case 3: //right
-                    pGhost2.x++;
-                    flag=1;
-                    break;
-                case 4: //left
-                    pGhost2.x--;
-                    flag=1;
-                    break;
-            }
-            if((*Map).map[pGhost2.y][pGhost2.x]=='|' || (*Map).map[pGhost2.y][pGhost2.x]=='-' || (*Map).map[pGhost2.y][pGhost2.x]=='P' || (*Map).map[pGhost2.y][pGhost2.x]=='G')
-            {   
-                pGhost2 = *ghost2;
-                flag=0;
-            }
-            else 
-                if(pPacMan.x==pGhost2.x && pPacMan.y==pGhost2.y)
-                {
-                    lose();
-                    return 2; //means lose
-                } 
+            case 1: //up
+                pGhost2.y++;
+                break;
+            case 2: //down
+                pGhost2.y--;
+                break;
+            case 3: //right
+                pGhost2.x++;
+                break;
+            case 4: //left
+                pGhost2.x--;
+                break;
+            default:
+                pGhost2 = *ghost2; //when the ghost can't move
         }
+        if(pPacMan.x==pGhost2.x && pPacMan.y==pGhost2.y)
+        {
+            lose();
+            freeMap(*Map);
+            return 2; //means lose
+        } 
         (*Map).map[pGhost2.y][pGhost2.x]='G';
         if((*Map).map[ghost2->y][ghost2->x] != '@')
             (*Map).map[ghost2->y][ghost2->x]=' ';
         ghost2->x=pGhost2.x;
         ghost2->y=pGhost2.y;
-        Sleep(300);
+        Sleep(600);
     }
+}
+int ghostMove(mapInfo Map,xoy ghost)
+{
+    int arr[4] = {1,2,3,4}, count=0,i=0,j=0;
+    if(Map.map[ghost.y+1][ghost.x]=='|' || Map.map[ghost.y+1][ghost.x]=='-' || Map.map[ghost.y+1][ghost.x]=='P' || Map.map[ghost.y+1][ghost.x]=='G')
+    {
+        count++;
+        arr[0]=0;
+    }
+    if(Map.map[ghost.y-1][ghost.x]=='|' || Map.map[ghost.y-1][ghost.x]=='-' || Map.map[ghost.y-1][ghost.x]=='P' || Map.map[ghost.y-1][ghost.x]=='G')
+    {
+        count++;
+        arr[1]=0;
+    }
+    if(Map.map[ghost.y][ghost.x+1]=='|' || Map.map[ghost.y][ghost.x+1]=='-' || Map.map[ghost.y][ghost.x+1]=='P' || Map.map[ghost.y][ghost.x+1]=='G')
+    {
+        count++;
+        arr[2]=0;
+    }
+    if(Map.map[ghost.y][ghost.x-1]=='|' || Map.map[ghost.y][ghost.x-1]=='-' || Map.map[ghost.y][ghost.x-1]=='P' || Map.map[ghost.y][ghost.x-1]=='G')
+    {
+        count++;
+        arr[3]=0;
+    }
+    srand(time(0));
+    if(count==4)
+        return 0;
+    count = rand()%(4-count)+1;
+    for(i=0;i<4;i++)
+    {
+        if(arr[i]!=0)
+            j++;
+        if(j==count)
+            break;
+    }
+    return arr[i];
 }

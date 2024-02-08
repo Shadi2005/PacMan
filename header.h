@@ -198,7 +198,7 @@ DESCRIPTION: Generates a random move.
 INPUT: None
 OUTPUT: Random move
 */
-int randMove();
+int ghostMove(mapInfo,xoy);
 /*
 DESCRIPTION: Manages the game 
 INPUT: Pointer to xoy for the pacMan, pointer to xoy for the ghost, pointer to mapInfo of the map, 
